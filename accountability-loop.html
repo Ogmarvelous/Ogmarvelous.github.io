@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accountability Loop | Live Interactive Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 50% 20%, #1e1b4b, #090d16 80%);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      color: #f3f4f6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    .back-btn {
+      margin-bottom: 1.25rem;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .back-btn:hover { color: #38bdf8; }
+
+    /* Phone Mockup Frame */
+    .phone-frame {
+      width: 100%;
+      max-width: 390px;
+      height: 780px;
+      background: #0b1120;
+      border: 8px solid #1f2937;
+      border-radius: 46px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(99, 102, 241, 0.15);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Dynamic Island / Notch */
+    .notch {
+      width: 110px;
+      height: 24px;
+      background: #1f2937;
+      border-radius: 12px;
+      margin: 10px auto 0;
+      z-index: 50;
+    }
+
+    /* Screen Container */
+    .screen {
+      flex: 1;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* App Header */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-top: 0.5rem;
+    }
+    .app-title { font-weight: 800; font-size: 1.15rem; color: #fff; }
+    .room-badge {
+      font-size: 0.72rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: 600;
+    }
+    .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px #10b981; }
+
+    /* Setup Intent View */
+    .setup-view { display: flex; flex-direction: column; flex: 1; justify-content: center; }
+    .setup-view h2 { font-size: 1.7rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem; }
+    .setup-view p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    
+    .input-box {
+      background: #131d31;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .input-box label { display: block; font-size: 0.75rem; text-transform: uppercase; color: #38bdf8; font-weight: 700; margin-bottom: 0.5rem; }
+    .input-box textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: none;
+      outline: none;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      color: #fff;
+      border: none;
+      padding: 1rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 8px 20px -4px rgba(56, 189, 248, 0.35);
+    }
+    .btn-start:hover { opacity: 0.95; }
+
+    /* Active Session View */
+    .active-view { display: none; flex-direction: column; flex: 1; }
+    .intent-banner {
+      background: #131d31;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .intent-banner small { font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; }
+    .intent-banner p { font-size: 0.95rem; font-weight: 600; color: #e2e8f0; margin-top: 0.25rem; }
+
+    /* Timer Display */
+    .timer-wrap {
+      text-align: center;
+      padding: 1.5rem 0;
+      background: rgba(19, 29, 49, 0.5);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 1.5rem;
+    }
+    .timer-val { font-size: 3.5rem; font-weight: 800; letter-spacing: -0.04em; color: #fff; }
+    .timer-sub { font-size: 0.8rem; color: #94a3b8; font-weight: 500; }
+
+    /* Co-Working Room List */
+    .room-title { font-size: 0.85rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .peers-list { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.5rem; flex: 1; }
+    .peer-card {
+      background: #131d31;
+      border: 1px solid #1e293b;
+      padding: 0.75rem 0.9rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .peer-info { display: flex; align-items: center; gap: 0.65rem; }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    .peer-text h4 { font-size: 0.85rem; font-weight: 700; }
+    .peer-text p { font-size: 0.72rem; color: #94a3b8; }
+
+    .btn-nudge {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-nudge:hover { background: #38bdf8; color: #000; }
+
+    .btn-finish {
+      background: #1e293b;
+      color: #f87171;
+      border: 1px solid #334155;
+      padding: 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      margin-top: auto;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #10b981;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="back-btn">← Return to Marvelous Nifemi's Portfolio</a>
+
+  <!-- Mobile Simulator Frame -->
+  <div class="phone-frame">
+    <div class="notch"></div>
+    <div id="toast" class="toast">👋 Nudge sent to Sarah!</div>
+
+    <div class="screen">
+      <!-- App Header -->
+      <div class="app-header">
+        <div class="app-title">Loop.</div>
+        <div class="room-badge"><span class="dot"></span> Room #4 (Silent Deep Work)</div>
+      </div>
+
+      <!-- Screen 1: Set Intent -->
+      <div id="setupView" class="setup-view">
+        <h2>What will you complete in the next hour?</h2>
+        <p>Procrastination thrives in isolation. State your goal, enter the room, and get it done.</p>
+
+        <div class="input-box">
+          <label>Your 1-Hour Focus Intent</label>
+          <textarea id="intentInput" rows="3" placeholder="e.g. Build JWT auth endpoints or finish Chapter 3..."></textarea>
+        </div>
+
+        <button class="btn-start" onclick="startFocusSession()">Lock In Intent & Join Room 🚀</button>
+      </div>
+
+      <!-- Screen 2: Active Co-Working Room -->
+      <div id="activeView" class="active-view">
+        <div class="intent-banner">
+          <small>My Current Intent</small>
+          <p id="displayIntent">"Building Authentication API"</p>
+        </div>
+
+        <div class="timer-wrap">
+          <div class="timer-val" id="timer">59:59</div>
+          <div class="timer-sub">Deep Focus Session Active</div>
+        </div>
+
+        <div class="room-title">Co-Working In This Room (3 Others)</div>
+        <div class="peers-list">
+          <!-- Peer 1 -->
+          <div class="peer-card">
+            <div class="peer-info">
+              <div class="avatar">SJ</div>
+              <div class="peer-text">
+                <h4>Sarah Jenkins</h4>
+                <p>Writing Product Specs</p>
+              </div>
+            </div>
+            <button class="btn-nudge" onclick="nudgePeer('Sarah')">Nudge 👋</button>
+          </div>
+
+          <!-- Peer 2 -->
+          <div class="peer-card">
+            <div class="peer-info">
+              <div class="avatar" style="color: #a855f7;">DK</div>
+              <div class="peer-text">
+                <h4>David Kim</h4>
+                <p>Fixing CSS bugs in checkout</p>
+              </div>
+            </div>
+            <button class="btn-nudge" onclick="nudgePeer('David')">Nudge 👋</button>
+          </div>
+
+          <!-- Peer 3 -->
+          <div class="peer-card">
+            <div class="peer-info">
+              <div class="avatar" style="color: #10b981;">AO</div>
+              <div class="peer-text">
+                <h4>Amara Okafor</h4>
+                <p>Designing mobile wireframes</p>
+              </div>
+            </div>
+            <button class="btn-nudge" onclick="nudgePeer('Amara')">Nudge 👋</button>
+          </div>
+        </div>
+
+        <button class="btn-finish" onclick="endSession()">End Session Early</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let secondsLeft = 3599;
+    let timerInterval = null;
+
+    function startFocusSession() {
+      const input = document.getElementById('intentInput').value.trim();
+      const goal = input || "Focusing on core engineering tasks";
+      
+      document.getElementById('displayIntent').textContent = `"${goal}"`;
+      document.getElementById('setupView').style.display = 'none';
+      document.getElementById('activeView').style.display = 'flex';
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (secondsLeft > 0) {
+          secondsLeft--;
+          const m = Math.floor(secondsLeft / 60);
+          const s = secondsLeft % 60;
+          document.getElementById('timer').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+      }, 1000);
+    }
+
+    function nudgePeer(name) {
+      const toast = document.getElementById('toast');
+      toast.textContent = `⚡ Sent gentle nudge to ${name}!`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function endSession() {
+      clearInterval(timerInterval);
+      secondsLeft = 3599;
+      document.getElementById('timer').textContent = '60:00';
+      document.getElementById('activeView').style.display = 'none';
+      document.getElementById('setupView').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
